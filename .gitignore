@@ -41,3 +41,15 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+ReadEXE/ReadEXE.vcxproj.user
+ReadEXE.opensdf
+*.sdf
+ReadEXE.v11.suo
+*.tlog
+ReadEXE/Debug/exe.obj
+*.obj
+ReadEXE/Debug/ReadEXE.lastbuildstate
+*.log
+ReadEXE/Debug/vc110.idb
+*.pdb
+ReadEXE/ReadEXE.vcxproj.filters
