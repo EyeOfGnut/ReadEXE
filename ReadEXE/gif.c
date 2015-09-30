@@ -17,6 +17,31 @@ int printTable(byte * buffer, int count) {
 	return 0;
 }
 
+int contReading(FILE *filePtr) {
+	byte buffer;
+	while (fread(&buffer, sizeof(byte), 1, filePtr) >= sizeof(byte)) {
+
+		switch (buffer) {
+		case 0x21:
+			printExtension(filePtr);
+			// Graphic Control Extension 0xF9
+			// Comment Extension 0xFE
+			// Plain Text 0x01
+			// Application Extension 0xFF
+			break;
+		case 0x2C:
+			printImageInfo(filePtr);
+			break;
+		case 0x3B:
+			printf("Caught end-of-GIF tag (0x%02X)\n", buffer);
+			break;
+		default:
+			break;
+		}
+	}
+	return 0;
+}
+
 int printColorTable(FILE *filePtr, byte flags)
 {	
 	/*  As per GIF89A Specification, the Global COlor Table "contains a number of bytes equal to 
@@ -46,37 +71,49 @@ int printColorTable(FILE *filePtr, byte flags)
 }
 
 
-int printImageInfo(FILE *filePtr){
+int printImageInfo(FILE *filePtr) {
 	struct IMAGE_DESCRIPTOR imgDesc;
+	ID_TAG imgTag;
+	ID_FLAGS imgFlags;
 	byte lzwSize;
 	byte imgSize;
 	byte *imgData;
-	int i;
+	int i, blockCounter;
 
 	fseek(filePtr, -1, SEEK_CUR);
 
 
-	//Image Descriptor Tag seems to be fine, but the Coords are skipping a byte somehow. Sizeof Image Descriptor showing as 12??
-	fread(&imgDesc, sizeof(struct IMAGE_DESCRIPTOR),1,filePtr);
-	fread(&lzwSize, sizeof(byte),1,filePtr);
-	fread(&imgSize, sizeof(byte),1,filePtr);
-	imgData = (byte *)malloc(imgSize);
-	fread(imgData, sizeof(byte),imgSize,filePtr);
+	//IMAGE_DESCRIPTOR struct would have two different sizes of member, and is then byte-padded to align the data by the compiler.
+	// To keep this from mucking up the data, we needed to split off the two smaller members, and thus needed to read them in separately.
+	fread(&imgTag, sizeof(ID_TAG), 1, filePtr);
+	fread(&imgDesc, sizeof(struct IMAGE_DESCRIPTOR), 1, filePtr);
+	fread(&imgFlags, sizeof(ID_FLAGS), 1, filePtr);
+	fread(&lzwSize, sizeof(byte), 1, filePtr);
+	fread(&imgSize, sizeof(byte), 1, filePtr);
 
-	printf("%i\n\n", sizeof(byte));
+	printf("Image Descriptor (Tag 0x%02X)\n", imgTag);
+	printf("\tCoords: (%u,%u)\n", imgDesc.left_coord, imgDesc.top_cord);
+	printf("\tSize: %ux%u\n", imgDesc.width, imgDesc.height);
+	printf("\tFlags: 0x%02X\n", imgFlags);
+	printf("\tLZW Size: %u\n\n", lzwSize);
+	printf("Image Sub-Blocks\n");
 
-	printf("Tag: 0x%02X\n", imgDesc.tag);
-	printf("\n\nCoords: (%u,%u)\n", imgDesc.left_coord, imgDesc.top_cord);
-	printf("Size: %ux%u\n", imgDesc.width, imgDesc.height);
-	printf("Flags: 0x%02X\n", imgDesc.flags);
-
-	printf("LZW Size: %u\n", lzwSize);
-	printf("Image Size: %u\n", imgSize);
-	printf("Image Data:\n");
-	for(i = 0; i < imgSize; i++) {
-		if(i%3 == 0) printf("\n\t%u\t", (i/3));
-		printf("0x%02X ", imgData[i]);
+	blockCounter = 0;
+	while (imgSize > 0) {
+		blockCounter++;
+		imgData = (byte *)malloc(imgSize);
+		fread(imgData, sizeof(byte), imgSize, filePtr);
+		printf("Block Size: %u\n", imgSize);
+		printf("Block Data:\n");
+		for (i = 0; i < imgSize; i++) {
+			if (i % 10 == 0) printf("\n\t%u\t", (i / 10));
+			printf("0x%02X ", imgData[i]);
+		}
+		printf("\n");
+		fread(&imgSize, sizeof(byte), 1, filePtr);
 	}
+	printf("Found %i Image Sub-Blocks\n", blockCounter);
+	return 0;
 }
 
 
@@ -100,31 +137,6 @@ int printExtension(FILE *filePtr){
 		break;
 	default:
 		break;
-	}
-	return 0;
-}
-
-int contReading(FILE *filePtr){
-	byte buffer;
-	while(fread(&buffer, sizeof(byte),1,filePtr) != EOF){
-
-	switch(buffer){
-	case 0x21:
-		printExtension(filePtr);
-		// Graphic Control Extension 0xF9
-		// Comment Extension 0xFE
-		// Plain Text 0x01
-		// Application Extension 0xFF
-		break;
-	case 0x2C:
-		printImageInfo(filePtr);
-		break;
-	case 0x3B:
-		// End of GIF Stream
-		break;
-	default:
-		break;
-		}
 	}
 	return 0;
 }

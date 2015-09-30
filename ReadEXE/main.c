@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 		// two types of FITS image file
 		break;
 	case 0x24:
-		printf("MS System Dployment Image");
+		printf("MS System Deployment Image");
 		break;
 	case 0x25:
 		// post script or pdf
