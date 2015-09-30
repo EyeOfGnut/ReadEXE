@@ -1,6 +1,8 @@
 #ifndef EXE_HEADER // prevent headers from being included twice
 #define EXE_HEADER
 
+#include "utils.h"
+
 struct EXE {
 	unsigned short signature;
 	unsigned short bytes_in_last_block;

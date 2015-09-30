@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "exe.h"
+#include "elf.h"
+#include "gif.h"
+#include "utils.h"
 
-typedef unsigned char byte;
 
 void check0x00(byte* buffer, FILE *filePtr);
 void check0x4D(byte* buffer, FILE *filePtr);
@@ -10,14 +12,10 @@ void checkISO(byte* buffer, FILE *filePtr);
 int main(int argc, char *argv[])
 {	
 	byte exeBuffer[12];
-	FILE *filePtr = fopen(argv[1], "rb"); // r = Read, b = Bytes
-
-	printf("%X\n", *filePtr);
+	FILE *filePtr; 
+	fopen_s(&filePtr, argv[1], "rb"); // r = Read, b = Bytes
 
 	fread(&exeBuffer,12,1,filePtr);
-
-	
-	printf("%X\n", *filePtr);
 
 	switch(exeBuffer[0])
 	{
@@ -73,7 +71,7 @@ int main(int argc, char *argv[])
 		//12 types of IFF
 		break;
 	case 0x47:
-		printf("GIF Image");
+		printGIF(filePtr);
 		break;
 	case 0x49:
 		//Could be MP3 or TIFF, or or AmiBack on an Amiga

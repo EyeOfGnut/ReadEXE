@@ -1,6 +1,8 @@
 #ifndef ELF_HEADER // prevent headers from being included twice
 #define ELF_HEADER
 
+#include "utils.h"
+
 struct ELF {
 	unsigned long signature;
 	unsigned char proc_class;
@@ -24,7 +26,7 @@ struct ELF {
 	unsigned short sht_names_index;
 };
 
+char *printOS(byte osID);
 int printElf(FILE *filePtr);
-
 
 #endif
